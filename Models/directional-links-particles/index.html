@@ -1,0 +1,29 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/react/umd/react.production.min.js"></script>
+  <script src="//unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+  <script src="//unpkg.com/@babel/standalone"></script>
+
+  <script src="//unpkg.com/react-force-graph-2d"></script>
+  <!--<script src="../../src/packages/react-force-graph-2d/dist/react-force-graph-2d.js"></script>-->
+</head>
+
+<body>
+  <div id="graph"></div>
+
+  <script type="text/jsx">
+    fetch('../datasets/miserables.json').then(res => res.json()).then(data => {
+      ReactDOM.render(
+        <ForceGraph2D
+          graphData={data}
+          nodeLabel="id"
+          nodeAutoColorBy="group"
+          linkDirectionalParticles="value"
+          linkDirectionalParticleSpeed={d => d.value * 0.001}
+        />,
+        document.getElementById('graph')
+      );
+    });
+  </script>
+</body>

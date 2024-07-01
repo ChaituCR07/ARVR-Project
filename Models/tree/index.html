@@ -1,0 +1,97 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/react/umd/react.production.min.js"></script>
+  <script src="//unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+  <script src="//unpkg.com/@babel/standalone"></script>
+
+  <script src="//unpkg.com/d3-dsv"></script>
+  <script src="//unpkg.com/dat.gui"></script>
+  <script src="//unpkg.com/d3-quadtree"></script>
+  <script src="//unpkg.com/d3-force"></script>
+
+  <script src="//unpkg.com/react-force-graph-2d"></script>
+  <!--<script src="../../src/packages/react-force-graph-2d/dist/react-force-graph-2d.js"></script>-->
+</head>
+
+<body>
+  <div id="graph"></div>
+
+  <script type="text/jsx">
+    const { useState, useEffect, useRef } = React;
+
+    const useForceUpdate = () => {
+      const setToggle = useState(false)[1];
+      return () => setToggle(b => !b);
+    };
+
+    const ForceTree = ({ data }) => {
+      const fgRef = useRef();
+
+      const [controls] = useState({ 'DAG Orientation': 'td'});
+      const forceUpdate = useForceUpdate();
+
+      useEffect(() => {
+        // add controls GUI
+        const gui = new dat.GUI();
+        gui.add(controls, 'DAG Orientation', ['td', 'bu', 'lr', 'rl', 'radialout', 'radialin', null])
+          .onChange(forceUpdate);
+      }, []);
+
+      useEffect(() => {
+        // add collision force
+        fgRef.current.d3Force('collision', d3.forceCollide(node => Math.sqrt(100 / (node.level + 1))));
+      }, []);
+
+      return <ForceGraph2D
+        ref={fgRef}
+        graphData={data}
+        dagMode={controls['DAG Orientation']}
+        dagLevelDistance={300}
+        backgroundColor="#101020"
+        linkColor={() => 'rgba(255,255,255,0.2)'}
+        nodeRelSize={1}
+        nodeId="path"
+        nodeVal={node => 100 / (node.level + 1)}
+        nodeLabel="path"
+        nodeAutoColorBy="module"
+        linkDirectionalParticles={2}
+        linkDirectionalParticleWidth={2}
+        d3VelocityDecay={0.3}
+      />;
+    };
+
+    fetch('../datasets/d3-dependencies.csv')
+      .then(r => r.text())
+      .then(d3.csvParse)
+      .then(data => {
+        const nodes = [], links = [];
+        data.forEach(({ size, path }) => {
+          const levels = path.split('/'),
+            level = levels.length - 1,
+            module = level > 0 ? levels[1] : null,
+            leaf = levels.pop(),
+            parent = levels.join('/');
+
+          const node = {
+            path,
+            leaf,
+            module,
+            size: +size || 20,
+            level
+          };
+
+          nodes.push(node);
+
+          if (parent) {
+            links.push({source: parent, target: path, targetNode: node});
+          }
+        });
+
+        ReactDOM.render(
+          <ForceTree data={{ nodes, links }} />,
+          document.getElementById('graph')
+        );
+      });
+  </script>
+</body>

@@ -1,0 +1,37 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/react/umd/react.production.min.js"></script>
+  <script src="//unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+  <script src="//unpkg.com/@babel/standalone"></script>
+
+  <script src="//unpkg.com/react-force-graph-2d"></script>
+<!--  <script src="../../src/packages/react-force-graph-2d/dist/react-force-graph-2d.js"></script>-->
+
+  <script src="../datasets/random-data.js"></script>
+</head>
+
+<body>
+<div id="graph"></div>
+
+<script type="text/jsx">
+  const { useRef } = React;
+
+  const data = genRandomTree();
+  const Graph = () => {
+    const fgRef = useRef();
+
+    return <ForceGraph2D
+      ref={fgRef}
+      graphData={data}
+      cooldownTicks={100}
+      onEngineStop={() => fgRef.current.zoomToFit(400)}
+    />;
+  };
+
+  ReactDOM.render(
+    <Graph />,
+    document.getElementById('graph')
+  );
+</script>
+</body>

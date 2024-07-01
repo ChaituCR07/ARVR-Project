@@ -1,0 +1,58 @@
+<head>
+  <style> body { margin: 0; } </style>
+
+  <script src="//unpkg.com/react/umd/react.production.min.js"></script>
+  <script src="//unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+  <script src="//unpkg.com/@babel/standalone"></script>
+
+  <script src="//unpkg.com/react-force-graph-3d"></script>
+  <!--<script src="../../src/packages/react-force-graph-3d/dist/react-force-graph-3d.js"></script>-->
+</head>
+
+<body>
+  <div id="graph"></div>
+
+  <script type="text/jsx">
+    const { useState, useEffect, useCallback } = React;
+
+    const DynamicGraph = () => {
+      const [data, setData] = useState({ nodes: [{ id: 0 }], links: [] });
+
+      useEffect(() => {
+        setInterval(() => {
+          // Add a new connected node every second
+          setData(({ nodes, links }) => {
+            const id = nodes.length;
+            return {
+              nodes: [...nodes, { id }],
+              links: [...links, { source: id, target: Math.round(Math.random() * (id-1)) }]
+            };
+          });
+        }, 1000);
+      }, []);
+
+      const handleClick = useCallback(node => {
+        const { nodes, links } = data;
+
+        // Remove node on click
+        const newLinks = links.filter(l => l.source !== node && l.target !== node); // Remove links attached to node
+        const newNodes = nodes.slice();
+        newNodes.splice(node.id, 1); // Remove node
+        newNodes.forEach((n, idx) => { n.id = idx; }); // Reset node ids to array index
+
+        setData({ nodes: newNodes, links: newLinks });
+      }, [data, setData]);
+
+      return <ForceGraph3D
+        enableNodeDrag={false}
+        onNodeClick={handleClick}
+        graphData={data}
+      />;
+    };
+
+    ReactDOM.render(
+      <DynamicGraph />,
+      document.getElementById('graph')
+    );
+  </script>
+</body>
